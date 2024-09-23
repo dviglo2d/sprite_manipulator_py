@@ -6,6 +6,9 @@ from PIL import Image
 
 # Расширяет изображение на border_size в каждую сторону, копируя крайние пиксели исходного изображения
 def expand_image(src_image: Image, border_size: int) -> Image:
+    if border_size < 0:
+        raise ValueError("border_size < 0")
+
     src_width, src_height = src_image.size
     
     # Создаём новое изображение с увеличенным размером
