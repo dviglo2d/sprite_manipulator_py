@@ -95,11 +95,11 @@ def join_tiles(tiles: np.ndarray, border_size: int = 0) -> tuple[Image.Image, ET
     for index_y in range(tiles.shape[0]):
         for index_x in range(tiles.shape[1]):
             atlas.paste(tiles[index_y, index_x], (index_x * tile_width, index_y * tile_height))
-            tile_elemnt = ET.SubElement(root, "tile")
-            tile_elemnt.set("x", str(index_x * tile_width + border_size))
-            tile_elemnt.set("y", str(index_y * tile_height + border_size))
-            tile_elemnt.set("width", str(tile_width - border_size * 2))
-            tile_elemnt.set("height", str(tile_height - border_size * 2))
+            tile_element = ET.SubElement(root, "tile")
+            tile_element.set("x", str(index_x * tile_width + border_size))
+            tile_element.set("y", str(index_y * tile_height + border_size))
+            tile_element.set("width", str(tile_width - border_size * 2))
+            tile_element.set("height", str(tile_height - border_size * 2))
 
     # Создаём xml-документ
     tree = ET.ElementTree(root)
