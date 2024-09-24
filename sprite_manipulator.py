@@ -71,7 +71,7 @@ def ceil_power_of_2(n: int) -> int:
         raise ValueError("n < 1")
     
     ret = 1
-    while ret <= n:
+    while ret < n:
         ret *= 2 # 1, 2, 4, 8, 16, 32, ...
 
     return ret
