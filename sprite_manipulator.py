@@ -3,18 +3,19 @@
 
 from PIL import Image
 import numpy as np
+import xml.etree.ElementTree as ET
 
 
 # Делит изображение на тайлы
-def split_image(image: Image, tile_width: int, tile_height: int) -> np.ndarray:
+def split_image(image: Image.Image, tile_width: int, tile_height: int) -> np.ndarray:
     if tile_width <= 0:
         raise ValueError("tile_width <= 0")
     
     if tile_height <= 0:
         raise ValueError("tile_height <= 0")
 
-    num_tiles_x = image.size[0] // tile_width
-    num_tiles_y = image.size[1] // tile_height
+    num_tiles_x: int = image.size[0] // tile_width
+    num_tiles_y: int = image.size[1] // tile_height
 
     # Создаём двумерный массив для хранения тайлов
     ret = np.empty((num_tiles_y, num_tiles_x), dtype=object)
@@ -28,15 +29,15 @@ def split_image(image: Image, tile_width: int, tile_height: int) -> np.ndarray:
 
 
 # Расширяет изображение на border_size в каждую сторону, копируя крайние пиксели исходного изображения
-def expand_image(src_image: Image, border_size: int) -> Image:
+def expand_image(src_image: Image.Image, border_size: int) -> Image.Image:
     if border_size < 0:
         raise ValueError("border_size < 0")
 
     src_width, src_height = src_image.size
     
     # Создаём новое изображение с увеличенным размером
-    new_width = src_width + border_size * 2
-    new_height = src_height + border_size * 2
+    new_width: int = src_width + border_size * 2
+    new_height: int = src_height + border_size * 2
     ret = Image.new("RGBA", (new_width, new_height))
     
     # Копируем исходное изображение в центр нового изображения
@@ -70,39 +71,53 @@ def ceil_power_of_2(n: int) -> int:
     if n < 1:
         raise ValueError("n < 1")
     
-    ret = 1
+    ret: int = 1
     while ret < n:
         ret *= 2 # 1, 2, 4, 8, 16, 32, ...
 
     return ret
 
 
-# Объединяет двумерный массив тайлов в атлас
-def join_tiles(tiles: np.ndarray) -> Image:
+# Объединяет двумерный массив тайлов в атлас.
+# Возвращает изображение и xml-документ
+def join_tiles(tiles: np.ndarray, border_size: int = 0) -> tuple[Image.Image, ET.ElementTree]:
     if tiles.ndim != 2 or tiles.size == 0 : # Убеждаемся, что массив двумерный и не пустой
         raise ValueError()
     
     tile_width, tile_height = tiles[0, 0].size
     atlas_width = ceil_power_of_2(tiles.shape[1] * tile_width)
     atlas_height = ceil_power_of_2(tiles.shape[0] * tile_height)
-    ret = Image.new("RGBA", (atlas_width, atlas_height), (0, 0, 0, 0))
+    atlas = Image.new("RGBA", (atlas_width, atlas_height), (0, 0, 0, 0))
+
+    # Создаём корневой элемент xml
+    root = ET.Element("tiles")
 
     for index_y in range(tiles.shape[0]):
         for index_x in range(tiles.shape[1]):
-            ret.paste(tiles[index_y, index_x], (index_x * tile_width, index_y * tile_height))
+            atlas.paste(tiles[index_y, index_x], (index_x * tile_width, index_y * tile_height))
+            tile_elemnt = ET.SubElement(root, "tile")
+            tile_elemnt.set("x", str(index_x * tile_width + border_size))
+            tile_elemnt.set("y", str(index_y * tile_height + border_size))
+            tile_elemnt.set("width", str(tile_width - border_size * 2))
+            tile_elemnt.set("height", str(tile_height - border_size * 2))
 
-    return ret
+    # Создаём xml-документ
+    tree = ET.ElementTree(root)
+    ET.indent(tree, space="    ")
+
+    return (atlas, tree)
 
 
 # Пример использования
-src_atlas_path = "input_atlas.png"
-src_tile_width = 16 # Ширина тайла в исходном аталасе
-src_tile_height = 32
-border_size = 4 # На сколько будет расширен каждый тайл
-result_atlas_path = "expanded_atlas.png"
+src_atlas_path: str = "input_atlas.png"
+src_tile_width: int = 16 # Ширина тайла в исходном аталасе
+src_tile_height: int = 32
+border_size: int = 2 # На сколько будет расширен каждый тайл
+result_atlas_path: str = "expanded_atlas.png"
+result_xml_path: str = "expanded_atlas.xml"
 
 # Загружаем текстурный атлас
-input_image = Image.open(src_atlas_path)
+input_image: Image.Image = Image.open(src_atlas_path)
 
 # Делим атлас на тайлы
 tiles = split_image(input_image, src_tile_width, src_tile_height)
@@ -110,10 +125,9 @@ tiles = split_image(input_image, src_tile_width, src_tile_height)
 # Расширяем каждый тайл
 for index_y in range(tiles.shape[0]):
     for index_x in range(tiles.shape[1]):
-        tiles[index_y, index_x] = expand_image(tiles[index_y, index_x], 2)
+        tiles[index_y, index_x] = expand_image(tiles[index_y, index_x], border_size)
 
 # Объединяем тайлы в новый атлас
-expanded_atlas = join_tiles(tiles)
-
-# Сохраняем результат
+expanded_atlas, xml_doc = join_tiles(tiles, border_size)
 expanded_atlas.save(result_atlas_path)
+xml_doc.write(result_xml_path)
