@@ -2,11 +2,11 @@
 # License: MIT
 
 from PIL import Image
-import numpy
+import numpy as np
 
 
 # Делит изображение на тайлы
-def split_image(image: Image, tile_width: int, tile_height: int) -> numpy.ndarray:
+def split_image(image: Image, tile_width: int, tile_height: int) -> np.ndarray:
     if tile_width <= 0:
         raise ValueError("tile_width <= 0")
     
@@ -17,7 +17,7 @@ def split_image(image: Image, tile_width: int, tile_height: int) -> numpy.ndarra
     num_tiles_y = image.size[1] // tile_height
 
     # Создаём двумерный массив для хранения тайлов
-    ret = numpy.empty((num_tiles_y, num_tiles_x), dtype=object)
+    ret = np.empty((num_tiles_y, num_tiles_x), dtype=object)
 
     for index_y in range(num_tiles_y):
         for index_x in range(num_tiles_x):
@@ -78,7 +78,7 @@ def ceil_power_of_2(n: int) -> int:
 
 
 # Объединяет двумерный массив тайлов в атлас
-def join_tiles(tiles: numpy.ndarray) -> Image:
+def join_tiles(tiles: np.ndarray) -> Image:
     if tiles.ndim != 2 or tiles.size == 0 : # Убеждаемся, что массив двумерный и не пустой
         raise ValueError()
     
