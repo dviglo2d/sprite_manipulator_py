@@ -130,4 +130,4 @@ for index_y in range(tiles.shape[0]):
 # Объединяем тайлы в новый атлас
 expanded_atlas, xml_doc = join_tiles(tiles, border_size)
 expanded_atlas.save(result_atlas_path)
-xml_doc.write(result_xml_path)
+xml_doc.write(result_xml_path, encoding="utf-8")
