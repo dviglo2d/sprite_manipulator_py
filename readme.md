@@ -5,3 +5,5 @@
 ```
 py -m pip install pillow numpy
 ```
+
+Использование: отредактируйте и запустите `sprite_manipulator.py`
